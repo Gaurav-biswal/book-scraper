@@ -1,11 +1,11 @@
-const { politeFetch } = require('./fetch');
-
-const BASE_URL = 'https://books.toscrape.com';
+const { discoverBookUrls } = require('./discover');
 
 async function main() {
-  const url = `${BASE_URL}/catalogue/page-1.html`;
-  const html = await politeFetch(url, 'catalogue-page-1.html');
-  console.log('Done. HTML length:', html.length);
+  const { pageCount, bookUrls } = await discoverBookUrls();
+
+  console.log(`catalogue_pages=${pageCount}`);
+  console.log(`discovered=${bookUrls.length}`);
+  console.log(`unique_urls=${new Set(bookUrls).size}`);
 }
 
 main().catch((err) => {
