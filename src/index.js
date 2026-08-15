@@ -1,11 +1,17 @@
 const { discoverBookUrls } = require('./discover');
+const { extractAllBookDetails } = require('./extract');
 
 async function main() {
-  const { pageCount, bookUrls } = await discoverBookUrls();
+  const { pageCount, bookEntries } = await discoverBookUrls();
 
   console.log(`catalogue_pages=${pageCount}`);
-  console.log(`discovered=${bookUrls.length}`);
-  console.log(`unique_urls=${new Set(bookUrls).size}`);
+  console.log(`discovered=${bookEntries.length}`);
+  console.log(`unique_urls=${bookEntries.length}`);
+
+  const records = await extractAllBookDetails(bookEntries);
+
+  console.log(`detail_pages=${records.length}`);
+  console.log('Sample record:', JSON.stringify(records[0], null, 2));
 }
 
 main().catch((err) => {
