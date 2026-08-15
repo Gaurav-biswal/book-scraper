@@ -1,6 +1,4 @@
 const cheerio = require("cheerio");
-const fs = require("fs");
-const path = require("path");
 const { politeFetch } = require("./fetch");
 
 const BASE_URL = "https://books.toscrape.com";
@@ -11,27 +9,27 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function isCached(cacheFile) {
-  return fs.existsSync(path.join(__dirname, "..", "cache", cacheFile));
-}
-
 async function discoverBookUrls() {
-  // Map instead of Set: url -> sourcePage, so we keep provenance for Stage 3.
   const bookMap = new Map();
   let pageUrl = `${BASE_URL}/catalogue/page-1.html`;
   let pageNumber = 1;
 
-  while (pageUrl) {
+  while (pageUrl && pageNumber <= MAX_PAGES) {
     const cacheFile = `catalogue-page-${pageNumber}.html`;
-    const alreadyCached = isCached(cacheFile);
 
-    const html = await politeFetch(pageUrl, cacheFile);
+    const result = await politeFetch(pageUrl, cacheFile);
 
-    if (!alreadyCached) {
+    if (!result.success) {
+      // A broken catalogue page is unlikely but should not crash discovery either.
+      console.log(`FAILED (catalogue page): ${pageUrl} - ${result.reason}`);
+      break;
+    }
+
+    if (!result.fromCache) {
       await sleep(DELAY_MS);
     }
 
-    const $ = cheerio.load(html);
+    const $ = cheerio.load(result.html);
     const currentPageUrl = pageUrl;
 
     $("article.product_pod h3 a").each((_, el) => {

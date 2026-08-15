@@ -56,22 +56,29 @@ function parseBookDetail(html, productUrl, sourcePage) {
 
 async function extractAllBookDetails(bookEntries) {
   const records = [];
+  const failures = [];
 
   for (const { url, sourcePage } of bookEntries) {
     const cacheFile = cacheFilenameFor(url);
     const alreadyCached = isCached(cacheFile);
 
-    const html = await politeFetch(url, cacheFile);
+    const result = await politeFetch(url, cacheFile);
 
-    if (!alreadyCached) {
+    if (!result.success) {
+      console.log(`FAILED: ${url} - ${result.reason}`);
+      failures.push({ url, reason: result.reason });
+      continue; // skip this one page, keep going
+    }
+
+    if (!alreadyCached && !result.fromCache) {
       await sleep(DELAY_MS);
     }
 
-    const record = parseBookDetail(html, url, sourcePage);
+    const record = parseBookDetail(result.html, url, sourcePage);
     records.push(record);
   }
 
-  return records;
+  return { records, failures };
 }
 
 module.exports = { extractAllBookDetails };
