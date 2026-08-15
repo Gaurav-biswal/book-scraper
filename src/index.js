@@ -1,5 +1,6 @@
 const { discoverBookUrls } = require('./discover');
 const { extractAllBookDetails } = require('./extract');
+const { validateAndStore } = require('./store');
 
 async function main() {
   const { pageCount, bookEntries } = await discoverBookUrls();
@@ -8,10 +9,12 @@ async function main() {
   console.log(`discovered=${bookEntries.length}`);
   console.log(`unique_urls=${bookEntries.length}`);
 
-  const records = await extractAllBookDetails(bookEntries);
+  const rawRecords = await extractAllBookDetails(bookEntries);
+  console.log(`detail_pages=${rawRecords.length}`);
 
-  console.log(`detail_pages=${records.length}`);
-  console.log('Sample record:', JSON.stringify(records[0], null, 2));
+  const { validCount, errorCount } = validateAndStore(rawRecords);
+  console.log(`valid_records=${validCount}`);
+  console.log(`invalid_records=${errorCount}`);
 }
 
 main().catch((err) => {
